@@ -1,0 +1,143 @@
+body {
+    background-color: red;
+}
+/* Basic reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  padding: 40px 16px;
+}
+
+/* Main card */
+.container {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  width: 100%;
+  max-width: 560px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+h1 {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  color: #888;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+/* Labels */
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 6px;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+/* Input and textarea styling */
+input[type="text"],
+textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  outline: none;
+  transition: border 0.2s;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+  border-color: #7c4ddd;
+}
+
+textarea {
+  resize: vertical;
+}
+
+/* Button */
+button {
+  margin-top: 20px;
+  width: 100%;
+  padding: 12px;
+  background: #7c4ddd;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: #6a3ec2;
+}
+
+button:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+/* Response area */
+.response-box {
+  margin-top: 24px;
+  background: #f7f3ff;
+  border: 1.5px solid #d5c5f7;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.response-box strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #7c4ddd;
+}
+
+#response {
+  color: #333;
+  white-space: pre-wrap; /* keeps line breaks from AI response */
+}
+.hero p {
+  color: rgba(255,255,255,0.9);
+}
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #0f4c5c, #1b6f82);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.btn-white {
+  background: white;
+  color: #0f4c5c;
+  font-weight: bold;
+}
+.btn-white:hover {
+  background: #f59e0b;
+  color: white;
+}
+
+
+.btn-white,
+.btn-white * {
+  color: #0f4c5c !important;
+  opacity: 1 !important;
+}

@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Remote Classroom</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  
+  <script src="../js/auth.js"></script>
+</head>
+<body>
+  <a href="login.html">Logout</a>
+
+<!-- ── Navbar ─────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="navbar-brand">📘 Remote<span>Classroom</span></div>
+  <div class="navbar-nav">
+    <span id="navUser" style="color:rgba(255,255,255,0.75);font-size:0.88rem;"></span>
+    <button class="btn-logout" id="logoutBtn">Sign Out</button>
+  </div>
+</nav>
+
+<!-- ── Page ───────────────────────────────────────────────── -->
+<div class="container page-wrap">
+
+  <!-- Dashboard header -->
+  <div class="dash-header">
+    <h1 id="welcomeMsg">Welcome back!</h1>
+    <p id="classLabel">Loading your class…</p>
+  </div>
+
+  <!-- ══ STUDENT VIEW ══════════════════════════════════════ -->
+  <div id="studentView">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="lectures">📄 Lectures</button>
+      <button class="tab-btn" data-tab="quizzes">📝 Quizzes</button>
+    </div>
+
+    <!-- Lectures tab -->
+    <div id="tab-lectures" class="tab-panel active">
+      <div id="lectureList" class="card-grid"></div>
+    </div>
+
+    <!-- Quizzes tab -->
+    <div id="tab-quizzes" class="tab-panel">
+      <div id="quizList" class="card-grid"></div>
+    </div>
+  </div>
+
+  <!-- ══ TEACHER VIEW ═══════════════════════════════════════ -->
+  <div id="teacherView" class="hidden">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="t-classes">🏫 My Classes</button>
+      <button class="tab-btn" data-tab="t-content">📁 Content</button>
+      <button class="tab-btn" data-tab="t-quizzes">📝 Quizzes</button>
+    </div>
+
+    <!-- Classes tab -->
+    <div id="tab-t-classes" class="tab-panel active">
+      <div class="section-title">
+        <h2>Your Classes</h2>
+        <button class="btn btn-primary btn-sm" id="btnCreateClass">+ New Class</button>
+      </div>
+      <div id="classList" class="card-grid"></div>
+    </div>
+
+    <!-- Content tab -->
+    <div id="tab-t-content" class="tab-panel">
+      <div class="section-title">
+        <h2>Upload Lecture</h2>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <select id="contentClassFilter" class="form-control" style="width:auto;padding:0.4rem 0.7rem;font-size:0.85rem;"></select>
+          <button class="btn btn-primary btn-sm" id="btnUploadContent">+ Upload</button>
+        </div>
+      </div>
+      <div id="contentList" class="card-grid"></div>
+    </div>
+
+    <!-- Teacher quizzes tab -->
+    <div id="tab-t-quizzes" class="tab-panel">
+      <div class="section-title">
+        <h2>Quizzes</h2>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <select id="quizClassFilter" class="form-control" style="width:auto;padding:0.4rem 0.7rem;font-size:0.85rem;"></select>
+          <button class="btn btn-primary btn-sm" id="btnCreateQuiz">+ New Quiz</button>
+        </div>
+      </div>
+      <div id="tQuizList" class="card-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALS ══════════════════════════════════════════════ -->
+
+<!-- Create Class Modal -->
+<div class="modal-overlay" id="modalCreateClass">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Create New Class</h2>
+      <button class="modal-close" data-close="modalCreateClass">✕</button>
+    </div>
+    <div id="createClassAlert" class="alert alert-error"></div>
+    <div class="form-group">
+      <label>Class Name <span style="color:var(--muted);font-size:0.78rem;">(e.g. FY BSc A)</span></label>
+      <input type="text" id="newClassName" class="form-control" placeholder="FY BSc A" />
+    </div>
+    <button class="btn btn-primary w-full" style="justify-content:center;" id="submitCreateClass">Create Class</button>
+  </div>
+</div>
+
+<!-- Upload Content Modal -->
+<div class="modal-overlay" id="modalUploadContent">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Upload Lecture</h2>
+      <button class="modal-close" data-close="modalUploadContent">✕</button>
+    </div>
+    <div id="uploadAlert" class="alert alert-error"></div>
+    <div class="form-group">
+      <label>Title</label>
+      <input type="text" id="contentTitle" class="form-control" placeholder="Introduction to Physics" />
+    </div>
+    <div class="form-group">
+      <label>Type</label>
+      <select id="contentType" class="form-control">
+        <option value="PDF">PDF</option>
+        <option value="Video">Video</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Class</label>
+      <select id="uploadClassId" class="form-control"></select>
+    </div>
+    <div class="form-group">
+      <label>File <span style="color:var(--muted);font-size:0.78rem;">(PDF or MP4, max 100MB)</span></label>
+      <input type="file" id="contentFile" class="form-control" accept=".pdf,.mp4,.webm,.ogg" />
+    </div>
+    <button class="btn btn-primary w-full" style="justify-content:center;" id="submitUpload">Upload</button>
+  </div>
+</div>
+
+<!-- Create Quiz Modal -->
+<div class="modal-overlay" id="modalCreateQuiz">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <h2>Create Quiz</h2>
+      <button class="modal-close" data-close="modalCreateQuiz">✕</button>
+    </div>
+    <div id="quizAlert" class="alert alert-error"></div>
+    <div class="form-group">
+      <label>Quiz Title</label>
+      <input type="text" id="quizTitle" class="form-control" placeholder="Chapter 1 Quiz" />
+    </div>
+    <div class="form-group">
+      <label>Class</label>
+      <select id="quizClassId" class="form-control"></select>
+    </div>
+
+    <div id="questionsContainer"></div>
+    <button type="button" class="btn btn-outline btn-sm mt-2" id="addQuestion">+ Add Question</button>
+
+    <button class="btn btn-primary w-full mt-2" style="justify-content:center;margin-top:1rem;" id="submitQuiz">Save Quiz</button>
+  </div>
+</div>
+
+<!-- Quiz Attempt Modal -->
+<div class="modal-overlay" id="modalAttemptQuiz">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <h2 id="attemptQuizTitle">Quiz</h2>
+      <button class="modal-close" data-close="modalAttemptQuiz">✕</button>
+    </div>
+    <div id="attemptQuizContent"></div>
+    <button class="btn btn-amber w-full" style="justify-content:center;" id="submitAttempt">Submit Answers</button>
+  </div>
+</div>
+
+<!-- Score Modal -->
+<div class="modal-overlay" id="modalScore">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-header">
+      <h2>Quiz Result</h2>
+      <button class="modal-close" data-close="modalScore">✕</button>
+    </div>
+    <div id="scoreContent" class="score-result"></div>
+  </div>
+</div>
+
+<script>
+// ─── State & Config ──────────────────────────────────────────
+const BASE  = 'http://localhost:5000/api';
+let user    = null;
+let myClasses = [];
+let currentAttemptId = null;
+
+// ─── Auth ─────────────────────────────────────────────────────
+const token = localStorage.getItem('token');
+if (!token) window.location.href = 'login.html';
+
+const authHeaders = () => ({ Authorization: `Bearer ${token}` });
+const jsonHeaders = () => ({ 'Content-Type': 'application/json', ...authHeaders() });
+
+async function apiFetch(url, opts = {}) {
+  const res  = await fetch(BASE + url, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Error');
+  return data;
+}
+
+// ─── Init ─────────────────────────────────────────────────────
+async function init() {
+  try {
+    user = await apiFetch('/auth/me', { headers: authHeaders() });
+    document.getElementById('navUser').textContent = user.name;
+    document.getElementById('welcomeMsg').textContent = `Welcome, ${user.name}!`;
+
+    if (user.role === 'teacher') {
+      document.getElementById('classLabel').textContent = 'Teacher Dashboard';
+      document.getElementById('teacherView').classList.remove('hidden');
+      document.getElementById('studentView').classList.add('hidden');
+      initTeacher();
+    } else {
+      const cls = user.classId;
+      document.getElementById('classLabel').textContent = cls ? `Class: ${cls.name}` : 'No class assigned';
+      initStudent();
+    }
+  } catch {
+    localStorage.clear();
+    window.location.href = 'login.html';
+  }
+}
+
+// ─── TABS ─────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const group = btn.closest('.tabs');
+    group.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const tabId = btn.dataset.tab;
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.classList.toggle('active', p.id === `tab-${tabId}`);
+    });
+    if (tabId === 't-content' || tabId === 't-quizzes') refreshTeacherContentTab();
+  });
+});
+
+// ─── LOGOUT ───────────────────────────────────────────────────
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.clear();
+  window.location.href = 'login.html';
+});
+
+// ─── MODALS ───────────────────────────────────────────────────
+document.querySelectorAll('[data-close]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById(btn.dataset.close).classList.remove('open');
+  });
+});
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+const openModal  = (id) => document.getElementById(id).classList.add('open');
+const closeModal = (id) => document.getElementById(id).classList.remove('open');
+
+function showModalAlert(alertId, msg) {
+  const el = document.getElementById(alertId);
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+// ─── STUDENT ──────────────────────────────────────────────────
+async function initStudent() {
+  loadLectures();
+  loadStudentQuizzes();
+}
+
+async function loadLectures() {
+  const el = document.getElementById('lectureList');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const content = await apiFetch('/content', { headers: authHeaders() });
+    if (!content.length) { el.innerHTML = emptyState('📄', 'No lectures yet.'); return; }
+    el.innerHTML = content.map(c => contentCard(c, false)).join('');
+  } catch { el.innerHTML = emptyState('⚠️', 'Failed to load lectures.'); }
+}
+
+async function loadStudentQuizzes() {
+  const el = document.getElementById('quizList');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const quizzes = await apiFetch('/quiz', { headers: authHeaders() });
+    if (!quizzes.length) { el.innerHTML = emptyState('📝', 'No quizzes yet.'); return; }
+
+    // Check results for each quiz
+    el.innerHTML = '';
+    for (const q of quizzes) {
+      let result = null;
+      try { result = await apiFetch(`/quiz/${q._id}/result`, { headers: authHeaders() }); } catch {}
+      el.innerHTML += studentQuizCard(q, result);
+    }
+    // Attach attempt handlers
+    el.querySelectorAll('.btn-attempt').forEach(btn => {
+      btn.addEventListener('click', () => attemptQuiz(btn.dataset.id, btn.dataset.title));
+    });
+    el.querySelectorAll('.btn-view-score').forEach(btn => {
+      btn.addEventListener('click', () => showScore(JSON.parse(btn.dataset.result)));
+    });
+  } catch { el.innerHTML = emptyState('⚠️', 'Failed to load quizzes.'); }
+}
+
+// ─── QUIZ ATTEMPT ─────────────────────────────────────────────
+async function attemptQuiz(id, title) {
+  currentAttemptId = id;
+  document.getElementById('attemptQuizTitle').textContent = title;
+  const body = document.getElementById('attemptQuizContent');
+  body.innerHTML = '<div class="spinner"></div>';
+  document.getElementById('submitAttempt').style.display = 'block';
+  openModal('modalAttemptQuiz');
+
+  try {
+    const quiz = await apiFetch(`/quiz/${id}`, { headers: authHeaders() });
+    body.innerHTML = quiz.questions.map((q, i) => `
+      <div class="quiz-question">
+        <div class="q-text">Q${i+1}. ${q.question}</div>
+        ${q.options.map((opt, j) => `
+          <label class="option-label">
+            <input type="radio" name="q${i}" value="${j}" />
+            ${opt}
+          </label>
+        `).join('')}
+      </div>
+    `).join('');
+
+    // Highlight selected
+    body.querySelectorAll('input[type=radio]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        body.querySelectorAll(`[name="${radio.name}"] label`).forEach(l => l.classList.remove('selected'));
+        radio.closest('label').classList.add('selected');
+      });
+    });
+  } catch { body.innerHTML = '<p class="text-muted text-center mt-2">Failed to load quiz.</p>'; }
+}
+
+document.getElementById('submitAttempt').addEventListener('click', async () => {
+  const body    = document.getElementById('attemptQuizContent');
+  const qs      = body.querySelectorAll('.quiz-question');
+  const answers = [];
+  let   ok      = true;
+
+  qs.forEach((qEl, i) => {
+    const checked = qEl.querySelector(`input[name="q${i}"]:checked`);
+    if (!checked) { ok = false; }
+    else answers.push(parseInt(checked.value));
+  });
+
+  if (!ok) return alert('Please answer all questions before submitting.');
+
+  try {
+    const result = await apiFetch(`/quiz/${currentAttemptId}/submit`, {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ answers }),
+    });
+    closeModal('modalAttemptQuiz');
+    showScore(result);
+    loadStudentQuizzes(); // refresh
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+function showScore(result) {
+  const pct = Math.round((result.score / result.total) * 100);
+  const cls = pct >= 70 ? 'score-good' : pct >= 40 ? 'score-mid' : 'score-low';
+  const msg = pct >= 70 ? '🎉 Excellent!' : pct >= 40 ? '👍 Good effort!' : '📚 Keep studying!';
+  document.getElementById('scoreContent').innerHTML = `
+    <div class="score-circle">
+      <span class="score-num">${result.score}</span>
+      <span class="score-den">/ ${result.total}</span>
+    </div>
+    <h3 style="margin-bottom:0.5rem;">${msg}</h3>
+    <span class="score-pill ${cls}" style="font-size:1rem;padding:0.3rem 1rem;">${pct}%</span>
+  `;
+  openModal('modalScore');
+}
+
+// ─── TEACHER ──────────────────────────────────────────────────
+async function initTeacher() {
+  await loadMyClasses();
+}
+
+async function loadMyClasses() {
+  const el = document.getElementById('classList');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    myClasses = await apiFetch('/classes/my', { headers: authHeaders() });
+    populateClassSelects();
+    if (!myClasses.length) { el.innerHTML = emptyState('🏫', 'No classes yet. Create one!'); return; }
+    el.innerHTML = myClasses.map(cls => `
+      <div class="card" style="display:flex;align-items:center;gap:1rem;">
+        <div style="font-size:2rem;">🏫</div>
+        <div>
+          <h3 style="font-family:var(--font-body);font-weight:600;">${cls.name}</h3>
+          <span class="text-muted">Created ${new Date(cls.createdAt).toLocaleDateString()}</span>
+        </div>
+      </div>
+    `).join('');
+  } catch { el.innerHTML = emptyState('⚠️', 'Failed to load classes.'); }
+}
+
+function populateClassSelects() {
+  const opts = myClasses.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+  ['uploadClassId','quizClassId','contentClassFilter','quizClassFilter'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts || '<option>No classes yet</option>';
+  });
+}
+
+async function refreshTeacherContentTab() {
+  const classId = document.getElementById('contentClassFilter')?.value;
+  if (classId) loadTeacherContent(classId);
+  const qClassId = document.getElementById('quizClassFilter')?.value;
+  if (qClassId) loadTeacherQuizzes(qClassId);
+}
+
+document.getElementById('contentClassFilter')?.addEventListener('change', (e) => loadTeacherContent(e.target.value));
+document.getElementById('quizClassFilter')?.addEventListener('change', (e) => loadTeacherQuizzes(e.target.value));
+
+async function loadTeacherContent(classId) {
+  const el = document.getElementById('contentList');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const content = await apiFetch(`/content?classId=${classId}`, { headers: authHeaders() });
+    if (!content.length) { el.innerHTML = emptyState('📁', 'No content uploaded yet.'); return; }
+    el.innerHTML = content.map(c => contentCard(c, true)).join('');
+    el.querySelectorAll('.btn-delete-content').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this content?')) return;
+        await apiFetch(`/content/${btn.dataset.id}`, { method: 'DELETE', headers: authHeaders() });
+        loadTeacherContent(classId);
+      });
+    });
+  } catch { el.innerHTML = emptyState('⚠️', 'Failed to load content.'); }
+}
+
+async function loadTeacherQuizzes(classId) {
+  const el = document.getElementById('tQuizList');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const quizzes = await apiFetch(`/quiz?classId=${classId}`, { headers: authHeaders() });
+    if (!quizzes.length) { el.innerHTML = emptyState('📝', 'No quizzes yet.'); return; }
+    el.innerHTML = quizzes.map(q => `
+      <div class="quiz-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <h3>${q.title}</h3>
+            <p class="meta">${q.questions.length} question${q.questions.length !== 1 ? 's' : ''} &bull; ${new Date(q.createdAt).toLocaleDateString()}</p>
+          </div>
+          <button class="btn btn-danger btn-delete-quiz" data-id="${q._id}">Delete</button>
+        </div>
+      </div>
+    `).join('');
+    el.querySelectorAll('.btn-delete-quiz').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this quiz?')) return;
+        await apiFetch(`/quiz/${btn.dataset.id}`, { method: 'DELETE', headers: authHeaders() });
+        loadTeacherQuizzes(classId);
+      });
+    });
+  } catch { el.innerHTML = emptyState('⚠️', 'Failed to load quizzes.'); }
+}
+
+// ─── CREATE CLASS ─────────────────────────────────────────────
+document.getElementById('btnCreateClass').addEventListener('click', () => openModal('modalCreateClass'));
+
+document.getElementById('submitCreateClass').addEventListener('click', async () => {
+  const name = document.getElementById('newClassName').value.trim();
+  if (!name) return showModalAlert('createClassAlert', 'Class name is required.');
+  try {
+    await apiFetch('/classes', { method: 'POST', headers: jsonHeaders(), body: JSON.stringify({ name }) });
+    closeModal('modalCreateClass');
+    document.getElementById('newClassName').value = '';
+    loadMyClasses();
+  } catch (err) { showModalAlert('createClassAlert', err.message); }
+});
+
+// ─── UPLOAD CONTENT ───────────────────────────────────────────
+document.getElementById('btnUploadContent').addEventListener('click', () => {
+  populateClassSelects();
+  openModal('modalUploadContent');
+});
+
+document.getElementById('submitUpload').addEventListener('click', async () => {
+  const title   = document.getElementById('contentTitle').value.trim();
+  const type    = document.getElementById('contentType').value;
+  const classId = document.getElementById('uploadClassId').value;
+  const file    = document.getElementById('contentFile').files[0];
+  const btn     = document.getElementById('submitUpload');
+
+  if (!title || !classId || !file) return showModalAlert('uploadAlert', 'All fields are required.');
+
+  const fd = new FormData();
+  fd.append('title', title);
+  fd.append('type', type);
+  fd.append('classId', classId);
+  fd.append('file', file);
+
+  btn.disabled = true;
+  btn.textContent = 'Uploading…';
+  try {
+    await fetch(`${BASE}/content`, { method: 'POST', headers: authHeaders(), body: fd }).then(r => r.json());
+    closeModal('modalUploadContent');
+    loadTeacherContent(classId);
+  } catch (err) { showModalAlert('uploadAlert', err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Upload'; }
+});
+
+// ─── CREATE QUIZ ──────────────────────────────────────────────
+document.getElementById('btnCreateQuiz').addEventListener('click', () => {
+  populateClassSelects();
+  document.getElementById('questionsContainer').innerHTML = '';
+  addQuestionBlock(); // start with one question
+  openModal('modalCreateQuiz');
+});
+
+document.getElementById('addQuestion').addEventListener('click', addQuestionBlock);
+
+let qCount = 0;
+function addQuestionBlock() {
+  qCount++;
+  const idx = qCount;
+  const div = document.createElement('div');
+  div.className = 'quiz-question';
+  div.id = `q-block-${idx}`;
+  div.innerHTML = `
+    <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+      <strong style="font-size:0.9rem;">Question ${idx}</strong>
+      <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.quiz-question').remove()">Remove</button>
+    </div>
+    <div class="form-group">
+      <input type="text" class="form-control q-text" placeholder="Enter your question here…" />
+    </div>
+    ${[0,1,2,3].map(i => `
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
+        <input type="radio" name="correct-${idx}" value="${i}" />
+        <input type="text" class="form-control opt-${i}" placeholder="Option ${i+1}" style="flex:1;" />
+      </div>
+    `).join('')}
+    <p style="font-size:0.75rem;color:var(--muted);margin-top:0.3rem;">⬤ Select the radio button next to the correct answer</p>
+  `;
+  document.getElementById('questionsContainer').appendChild(div);
+}
+
+document.getElementById('submitQuiz').addEventListener('click', async () => {
+  const title   = document.getElementById('quizTitle').value.trim();
+  const classId = document.getElementById('quizClassId').value;
+  const blocks  = document.querySelectorAll('#questionsContainer .quiz-question');
+
+  if (!title || !classId) return showModalAlert('quizAlert', 'Title and class are required.');
+  if (!blocks.length) return showModalAlert('quizAlert', 'Add at least one question.');
+
+  const questions = [];
+  let valid = true;
+
+  blocks.forEach((block, i) => {
+    const qText   = block.querySelector('.q-text').value.trim();
+    const opts    = [0,1,2,3].map(j => block.querySelector(`.opt-${j}`).value.trim());
+    const checked = block.querySelector(`input[type=radio]:checked`);
+    if (!qText || opts.some(o => !o) || !checked) { valid = false; return; }
+    questions.push({ question: qText, options: opts, correctAnswer: parseInt(checked.value) });
+  });
+
+  if (!valid) return showModalAlert('quizAlert', 'Fill all question fields and select correct answers.');
+
+  try {
+    await apiFetch('/quiz', { method: 'POST', headers: jsonHeaders(), body: JSON.stringify({ title, classId, questions }) });
+    closeModal('modalCreateQuiz');
+    document.getElementById('quizTitle').value = '';
+    document.getElementById('questionsContainer').innerHTML = '';
+    qCount = 0;
+    loadTeacherQuizzes(classId);
+  } catch (err) { showModalAlert('quizAlert', err.message); }
+});
+
+// ─── HELPERS ──────────────────────────────────────────────────
+function contentCard(c, isTeacher) {
+  const isPDF  = c.type === 'PDF';
+  const icon   = isPDF ? '📄' : '🎬';
+  const badge  = isPDF ? 'badge-pdf' : 'badge-video';
+  const date   = new Date(c.createdAt).toLocaleDateString();
+
+  return `
+    <div class="content-card">
+      <div class="content-icon ${c.type.toLowerCase()}">${icon}</div>
+      <div class="content-info">
+        <h3>${c.title}</h3>
+        <p class="meta"><span class="badge ${badge}">${c.type}</span> &bull; ${date}</p>
+      </div>
+      <div class="content-actions">
+        <a href="${c.fileUrl}" target="_blank" class="btn btn-outline btn-sm">
+          ${isPDF ? 'View' : 'Play'}
+        </a>
+        ${isTeacher ? `<button class="btn btn-danger btn-delete-content" data-id="${c._id}">✕</button>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function studentQuizCard(q, result) {
+  const date = new Date(q.createdAt).toLocaleDateString();
+  if (result) {
+    const pct = Math.round((result.score / result.total) * 100);
+    const cls = pct >= 70 ? 'score-good' : pct >= 40 ? 'score-mid' : 'score-low';
+    return `
+      <div class="quiz-card">
+        <h3>${q.title}</h3>
+        <p class="meta">${q.questions?.length ?? '?'} questions &bull; ${date}</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span class="score-pill ${cls}">${result.score}/${result.total} &mdash; ${pct}%</span>
+          <button class="btn btn-outline btn-sm btn-view-score" data-result='${JSON.stringify(result)}'>View Score</button>
+        </div>
+      </div>
+    `;
+  }
+  return `
+    <div class="quiz-card">
+      <h3>${q.title}</h3>
+      <p class="meta">${q.questions?.length ?? '?'} questions &bull; ${date}</p>
+      <button class="btn btn-amber btn-sm btn-attempt" data-id="${q._id}" data-title="${q.title}">Attempt Quiz →</button>
+    </div>
+  `;
+}
+
+function emptyState(icon, msg) {
+  return `<div class="empty-state" style="grid-column:1/-1;"><div class="icon">${icon}</div><p>${msg}</p></div>`;
+}
+
+// ─── Start ────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

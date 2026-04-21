@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+
+<body>
+
+<div class="dashboard">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2>📘 RemoteClassroom</h2>
+    <p id="navUser">User</p>
+
+    <button class="tab-btn active" data-tab="t-classes">🏫 My Classes</button>
+    <button class="tab-btn" data-tab="t-content">📁 Content</button>
+    <button class="tab-btn" data-tab="t-quizzes">📝 Quizzes</button>
+
+    <!-- TEST CONTENT BUTTON -->
+    <button onclick="testContent()">📄 Test Content</button>
+    <button onclick="showLectures()">🎥 Lectures</button>
+
+    <button id="logoutBtn">Sign Out</button>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <h1 id="welcomeMsg">Welcome</h1>
+    <p id="classLabel">Dashboard</p>
+
+    <!-- GRID -->
+    <div class="grid">
+
+      <!-- CREATE CLASS -->
+      <div class="card">
+        <h2>Create Class</h2>
+        <input id="newClassName" placeholder="FY BSc A">
+        <button id="submitCreateClass">Create</button>
+      </div>
+
+      <!-- UPLOAD -->
+      <div class="card">
+        <h2>Upload Lecture</h2>
+        <input id="contentTitle" placeholder="Title">
+        <select id="contentType">
+          <option>PDF</option>
+          <option>Video</option>
+        </select>
+        <select id="uploadClassId"></select>
+        <input type="file" id="contentFile">
+        <button id="submitUpload">Upload</button>
+      </div>
+
+      <!-- QUIZ -->
+      <div class="card">
+        <h2>Create Quiz</h2>
+        <input id="quizTitle" placeholder="Quiz Title">
+        <select id="quizClassId"></select>
+        <button id="addQuestion">+ Add Question</button>
+        <button id="submitQuiz">Save Quiz</button>
+      </div>
+
+    </div>
+
+    <!-- CONTENT LIST -->
+    <div id="contentList"></div>
+    <div id="lectureList"></div>
+
+  </main>
+
+</div>
+
+<script>
+const BASE = "http://localhost:5000/api";
+const token = localStorage.getItem("token");
+
+if (!token) window.location.href = "login.html";
+
+const authHeaders = () => ({
+  Authorization: `Bearer ${token}`
+});
+
+async function apiFetch(url, opts = {}) {
+  const res = await fetch(BASE + url, opts);
+  return await res.json();
+}
+
+/* INIT */
+async function init() {
+  const user = await apiFetch("/auth/me", { headers: authHeaders() });
+
+  document.getElementById("navUser").innerText = user.name;
+  document.getElementById("welcomeMsg").innerText = `Welcome, ${user.name}`;
+}
+
+/* LOGOUT */
+document.getElementById("logoutBtn").onclick = () => {
+  localStorage.clear();
+  window.location.href = "login.html";
+};
+
+/* TEST CONTENT (PDF) */
+async function testContent() {
+  const res = await fetch(`${BASE}/content`);
+  const data = await res.json();
+
+  const container = document.getElementById("contentList");
+  container.innerHTML = "<h2>CONTENT</h2>";
+
+  data.forEach(item => {
+    container.innerHTML += `
+      <div class="card">
+        <h3>${item.title}</h3>
+        <button onclick="window.open('${item.url}')">Open</button>
+      </div>
+    `;
+  });
+}
+
+init();
+</script>
+<script>
+function showLectures() {
+  const container = document.getElementById("lectureList");
+
+  // clear previous content
+  container.innerHTML = "<h2>Lectures</h2>";
+
+  const lectures = [
+    {
+      title: "DAA_lecture_1",
+      link: "https://youtu.be/u8JZ9gU5o4g?si=B22ghIQnzamDQkXL"
+    },
+    {
+      title: "COMPILER_DESIGN",
+      link: "https://youtu.be/OQCjakjCJu4?si=fVcvGSHnwf5iW8ph"
+    },
+    {
+      title: "ANDROID_PROGRAMING",
+      link: "https://youtu.be/mXjZQX3UzOs?si=rQJQffd2Elytp6bW"
+    }
+  ];
+
+  lectures.forEach(l => {
+    container.innerHTML += `
+      <div class="card">
+        <h3>${l.title}</h3>
+        <button onclick="window.open('${l.link}')">Watch</button>
+      </div>
+    `;
+  });
+}
+</script>
+
+</body>
+</html>

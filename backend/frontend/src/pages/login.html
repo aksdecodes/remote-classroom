@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Remote Classroom</title>
+  
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="../js/auth.js"></script>
+</head>
+<body>
+  <a href="register.html">Don't have account? Register</a>
+  
+  
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">📘 Remote<span>Classroom</span></div>
+      <p class="auth-sub">Sign in to access your class</p>
+
+      <div id="alert" class="alert alert-error"></div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" class="form-control" placeholder="student@example.com" />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" class="form-control" placeholder="••••••••" />
+      </div>
+
+      <button id="loginBtn" class="btn btn-primary w-full" style="justify-content:center; margin-top:0.5rem;">
+        Sign In
+      </button>
+
+      <p class="auth-footer">
+        Don't have an account? <a href="register.html">Register here</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const BASE = 'http://localhost:5000/api';
+
+    // Redirect if already logged in
+    if (localStorage.getItem('token')) {
+      window.location.href = 'dashboard.html';
+    }
+
+    const showAlert = (msg) => {
+      const el = document.getElementById('alert');
+      el.textContent = msg;
+      el.classList.add('show');
+    };
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const btn      = document.getElementById('loginBtn');
+      if (btn.disabled) return;
+
+      if (!email || !password) return showAlert('Please fill in all fields.');
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
+      try {
+        const res  = await fetch(`${BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data));
+        window.location.href = 'dashboard.html';
+      } catch (err) {
+        showAlert(err.message || 'Login failed. Try again.');
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    });
+
+    // Allow Enter key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('loginBtn').click();
+    });
+  </script>
+</body>
+</html>
